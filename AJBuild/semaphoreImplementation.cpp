@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <pthread.h>
 
 
 #define CONSUMERS 2
@@ -122,10 +121,10 @@ int main(int argc, char* argv[]) {
             rc = pthread_create(&consumers[i], NULL, consume, (void *)&c[i]);
 
             if(rc){
-                perror("In producer create method");
+                perror("In consumer create method");
                 exit(1);
             }
-            usleep(10000);
+            usleep(20000);
         }
 
         usleep(MAIN_SLEEP_TIME);
