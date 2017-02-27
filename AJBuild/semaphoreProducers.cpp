@@ -6,8 +6,8 @@
 
 #define CONSUMERS 1
 #define PRODUCERS 2
-#define CONSUMER_SLEEP_TIME 1000
-#define PRODUCER_SLEEP_TIME 1000
+#define CONSUMER_SLEEP_TIME 25000
+#define PRODUCER_SLEEP_TIME 20000
 #define MAIN_SLEEP_TIME 500000
 #define BUFFER_SIZE 4
 
@@ -17,29 +17,37 @@ sem_t semProducer;
 
 int readCount;
 bool working;
+int check;
 
 void *produce(void *arg)
 {
+    int *id = (int *)arg;
   int i = 0;
   while(1)
   {
     if(i==5){
       break;
     }
+
     if(size == BUFFER_SIZE)
     {
       printf("Producer %d waiting...\n", id);
       sem_wait(&semProducer);
     }
 
+    sem_wait(&semProducer);
     theArray[size] = i;
-    printf("Producer %d added %d.\n", id, i);
+    printf("Producer %d added %d.\n", id, size);
     size++;
+    usleep(1000);
+    sem_post(&semProducer);
 
-    if (size == 1)
+    sem_getvalue(&semConsumer,&check);
+    if (size == 1 && check != 1 )
     {
       sem_post(&semConsumer);
     }
+
 
     usleep(PRODUCER_SLEEP_TIME);
     i++;
@@ -56,20 +64,27 @@ void *consume(void *arg)
     if(i==10){
       break;
     }
+
     if (size == 0)
     {
       printf("Consumer waiting....\n");
       sem_wait(&semConsumer);
     }
 
-    item = theArray[size-1];
-    printf("Consumer removed %d.\n", item);
-    size--;
+    sem_wait(&semConsumer);
+    item = theArray[--size];
+    printf("Consumer removed %d.\n", size);
+    //size--;
+    usleep(1000);
+    sem_post(&semConsumer);
+
 
     if (size == BUFFER_SIZE-1)
     {
       sem_post(&semProducer);
     }
+
+
 
     usleep(CONSUMER_SLEEP_TIME);
     i++;
@@ -81,14 +96,14 @@ void *consume(void *arg)
 int main(int argc, char* argv[])
 {
   pthread_t conThreads[CONSUMERS], prodThreads[PRODUCERS];
-  int rc,c[CONSUMERS],p[PRODUCERS];
+  int i,rc,c[CONSUMERS],p[PRODUCERS];
 
   sem_init(&semProducer,0,1);
   sem_init(&semConsumer,0,1);
   working = true;
   for(i=0; i<PRODUCERS; i++) {
       p[i]=i;
-      rc = pthread_create(&producers[i], NULL, produce, (void *)&p[i]);
+      rc = pthread_create(&prodThreads[i], NULL, produce, (void *)&p[i]);
 
       if(rc){
           perror("In producer create method");
@@ -99,7 +114,7 @@ int main(int argc, char* argv[])
 
   for(i=0; i<CONSUMERS; i++) {
       c[i]=i;
-      rc = pthread_create(&consumers[i], NULL, consume, (void *)&c[i]);
+      rc = pthread_create(&conThreads[i], NULL, consume, (void *)&c[i]);
 
       if(rc){
           perror("In producer create method");
@@ -113,10 +128,10 @@ int main(int argc, char* argv[])
   }
 
   for(i = 0; i < CONSUMERS; ++i)
-      pthread_cancel(consumers[i]);
+      pthread_cancel(conThreads[i]);
 
   for(i = 0; i < PRODUCERS; ++i)
-      pthread_cancel(producers[i]);
+      pthread_cancel(prodThreads[i]);
 
 
   sem_destroy(&semConsumer);

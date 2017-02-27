@@ -1,4 +1,3 @@
- #include <stdio.h>
  #include <mqueue.h>
  #include <sys/stat.h>
  #include <stdio.h>
