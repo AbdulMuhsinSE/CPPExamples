@@ -14,9 +14,12 @@
  char msgcontent[MAX_MSG_LEN];
  int msg_size;
  unsigned int priority;
+ char *stop ="stop";
+
 
  /* open the queue created by the sender */
  myQ_id = mq_open(QUEUE_NAME, O_RDWR);
+ while(1){
  if (myQ_id == (mqd_t)-1) {
  perror("In mq_open()");
  exit(1);
@@ -30,14 +33,21 @@
  exit(1);
  }
 
+ if(strcmp(msgcontent, stop)==0){
+    printf("Msg reader was told to stop");
+    break;
+ }
+
  /* output message info */
  printf("Received a message.\n");
  printf(" Content: %s\n", msgcontent);
  printf(" Size: %d bytes.\n", msg_size);
  printf(" Priority: %d\n", priority);
 
- /* close the qeueu */
- mq_close(myQ_id);
 
+
+ }
+/* close the qeueu */
+ mq_close(myQ_id);
  return 0;
  }

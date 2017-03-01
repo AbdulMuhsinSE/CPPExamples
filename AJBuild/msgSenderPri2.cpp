@@ -14,7 +14,7 @@
 
 int main(int argc, char *argv[]) {
         mqd_t myQ_id;
-        unsigned int msg_priority = 0;
+        unsigned int msg_priority = 2;
         pid_t my_pid = getpid();
         char msgcontent[MAX_MSG_LEN];
         char *input;
@@ -22,10 +22,9 @@ int main(int argc, char *argv[]) {
         /* create a message queue */
 
         printf("User input:");
-        scanf("%s", input);
+        //scanf("%s", input);
         while (strcmp(input, stop)!=0) {
-
-                printf("%s",input);
+                scanf("%s", input);
 
                 myQ_id = mq_open(QUEUE_NAME, O_RDWR | O_CREAT | O_EXCL,
                          S_IRWXU | S_IRWXG, NULL);
@@ -52,15 +51,19 @@ int main(int argc, char *argv[]) {
 
                 /* send the message */
                 if (mq_send(myQ_id, msgcontent, strlen(msgcontent)+1, msg_priority) == 0) {
+                        if(strcmp(msgcontent, stop)!=0){
                         printf("A message is sent. \n");
                         printf(" Content: %s\n", msgcontent);
+                        } else {
+                        printf("Message to stop has been added");
+                        }
                 }
                 else {
                         perror("In mq_send()");
                         exit(1);
                 }
 
-                scanf("%s", input);
+
         }
 
         /* close the queue */
