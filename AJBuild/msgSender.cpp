@@ -13,8 +13,22 @@
  #define MAX_MSG_LEN 100
 
 int main(int argc, char *argv[]) {
+
+        /*
+        Command line arguments are used to define priority, if no command line args are used
+        the sender will default to priority 0
+        */
+
         mqd_t myQ_id;
         unsigned int msg_priority = 0;
+        if(argc >= 2)
+        {
+            //printf(argv[1]);
+            sscanf (argv[1], "%d", &msg_priority);
+            //msg_priority<<argv[1];
+        }
+        printf("msgSender priority %d\n",msg_priority);
+        unsigned int priority = msg_priority;
         pid_t my_pid = getpid();
         char msgcontent[MAX_MSG_LEN];
         char *input;
@@ -50,12 +64,12 @@ int main(int argc, char *argv[]) {
                 snprintf(msgcontent, MAX_MSG_LEN,input,my_pid );
 
                 /* send the message */
-                if (mq_send(myQ_id, msgcontent, strlen(msgcontent)+1, msg_priority) == 0) {
+                if (mq_send(myQ_id, msgcontent, strlen(msgcontent)+1, priority) == 0) {
                         if(strcmp(msgcontent, stop)!=0){
                         printf("A message is sent. \n");
                         printf(" Content: %s\n", msgcontent);
                         } else {
-                        printf("Message to stop has been added");
+                        printf("Message to stop has been added\n");
                         }
                 }
                 else {
